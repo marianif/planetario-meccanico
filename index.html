@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Orrery — A Mechanical Poetry of the Solar System</title>
+<meta name="description" content="A scientifically grounded orrery of the solar system: real orbital elements, procedurally generated worlds, and the astrological meaning of every planet.">
+<meta name="theme-color" content="#04050a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2304050a'/%3E%3Cg fill='none' stroke='%23d9b45c' stroke-width='1.1'%3E%3Cellipse cx='16' cy='16' rx='13' ry='5'/%3E%3Cellipse cx='16' cy='16' rx='8' ry='3'/%3E%3C/g%3E%3Ccircle cx='16' cy='16' r='3' fill='%23f0d79a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<canvas id="sky" aria-hidden="true"></canvas>
+<div class="veil" aria-hidden="true"></div>
+
+<p class="scalenote" id="scaleNote" aria-hidden="true">
+  <i></i><span id="scaleNoteText">planetary radii amplified for legibility · orbits and phases are true</span>
+</p>
+
+<a class="skip" href="#story">Skip to the orrery</a>
+
+<!-- ================================================================ nav -->
+<header class="nav" id="nav">
+  <a class="nav__mark" href="#hero" aria-label="Orrery, home">
+    <svg viewBox="0 0 32 32" aria-hidden="true" class="nav__glyph">
+      <ellipse cx="16" cy="16" rx="14" ry="5.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>
+      <ellipse cx="16" cy="16" rx="9" ry="3.6" fill="none" stroke="currentColor" stroke-width="1" opacity=".4"/>
+      <circle cx="16" cy="16" r="2.6" fill="currentColor"/>
+      <circle cx="29" cy="16" r="1.5" fill="currentColor" opacity=".8"/>
+    </svg>
+    <span class="nav__word">ORRERY</span>
+  </a>
+  <nav class="nav__links" aria-label="Chapters">
+    <a href="#sun">Sol</a>
+    <a href="#earth">Earth</a>
+    <a href="#saturn">Saturn</a>
+    <a href="#orrery">Orrery</a>
+    <a href="#zodiac">Chart</a>
+  </nav>
+  <div class="nav__clock" id="clock" aria-live="off">
+    <span class="nav__utc" id="utc">--:--:--</span>
+    <span class="nav__sep">/</span>
+    <span class="nav__gmst" id="sidereal">--°--'</span>
+  </div>
+</header>
+
+<!-- =========================================================== progress -->
+<div class="rail" aria-hidden="true"><i id="railFill"></i></div>
+
+<main id="story">
+
+  <!-- ============================================================= hero -->
+  <section class="chapter chapter--hero" id="hero" data-chapter="hero">
+    <div class="sticky">
+      <div class="wrap hero">
+        <p class="eyebrow reveal" data-d="0">
+          <span class="eyebrow__rule" aria-hidden="true"></span>
+          <span id="heroEpoch">J2000 · Keplerian elements, live</span>
+        </p>
+
+        <h1 class="display reveal" data-d="1">
+          <span class="display__l1">A mechanical</span>
+          <span class="display__l2"><em>poetry</em> of the</span>
+          <span class="display__l3">solar system</span>
+        </h1>
+
+        <p class="lede reveal" data-d="2">
+          Nine worlds on real orbits, drawn from real elements, lit by one real star.
+          Every position on this page was computed — not painted. What the sky
+          says, and what it has always been said to mean.
+        </p>
+
+        <div class="hero__foot reveal" data-d="3">
+          <a class="btn" href="#sun">
+            <span>Begin at the centre</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v15m0 0l-6-6m6 6l6-6" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+          </a>
+          <dl class="hero__stats">
+            <div><dt>Positions</dt><dd id="statPos">Standish 1992</dd></div>
+            <div><dt>Surfaces</dt><dd>procedural fBm</dd></div>
+            <div><dt>Render</dt><dd>canvas 2D · 60 fps</dd></div>
+          </dl>
+        </div>
+      </div>
+      <p class="scrollcue" aria-hidden="true"><i></i>scroll</p>
+    </div>
+  </section>
+
+  <!-- ====================================================== planet chapters
+       These are generated from js/data.js so the copy, the physics and the
+       choreography can never drift apart.                              -->
+  <div id="bodyChapters"></div>
+
+  <!-- ============================================================ orrery -->
+  <section class="chapter chapter--pin" id="orrery" data-chapter="orrery">
+    <div class="sticky">
+      <div class="wrap panel panel--wide">
+        <header class="panel__head">
+          <p class="eyebrow reveal" data-d="0"><span class="eyebrow__rule" aria-hidden="true"></span>Interactive · Ephemeris</p>
+          <h2 class="h2 reveal" data-d="1">Turn the machine</h2>
+          <p class="panel__lede reveal" data-d="2">
+            Drag to orbit. Scrub the date to run the whole system forward —
+            Jupiter takes twelve years, Pluto needs two centuries, and the
+            arrangement you are looking at is the one for tonight.
+          </p>
+        </header>
+      </div>
+
+      <div class="orrery-deck" id="orreryDeck">
+        <div class="orrery-deck__ring" aria-hidden="true"></div>
+      </div>
+
+      <div class="orrery-panel">
+        <div class="orrery-panel__time">
+          <label class="field">
+            <span class="field__label">Epoch · UTC</span>
+            <input type="datetime-local" id="epochInput" step="3600" aria-label="Epoch, UTC">
+          </label>
+          <div class="scrub">
+            <input type="range" id="timeScrub" min="-1000" max="1000" value="0" step="1" aria-label="Scrub time">
+            <div class="scrub__ticks" id="scrubTicks" aria-hidden="true"></div>
+          </div>
+          <div class="orrery-panel__btns">
+            <button type="button" class="chip" data-jump="-365.25">−1 yr</button>
+            <button type="button" class="chip" data-jump="-30.44">−1 mo</button>
+            <button type="button" class="chip is-live" data-now>Now</button>
+            <button type="button" class="chip" data-jump="30.44">+1 mo</button>
+            <button type="button" class="chip" data-jump="365.25">+1 yr</button>
+            <button type="button" class="chip" data-toggle="labels">Labels</button>
+            <button type="button" class="chip" data-toggle="orbits">Orbits</button>
+            <button type="button" class="chip" data-toggle="zodiac">Zodiac</button>
+          </div>
+        </div>
+        <aside class="orrery-panel__read" id="orreryRead" aria-live="polite">
+          <p class="read__hint">Hover a world to read its live state.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ zodiac -->
+  <section class="chapter chapter--pin" id="zodiac" data-chapter="zodiac">
+    <div class="sticky">
+      <div class="wrap panel">
+        <header class="panel__head">
+          <p class="eyebrow reveal" data-d="0"><span class="eyebrow__rule" aria-hidden="true"></span>The ecliptic, measured</p>
+          <h2 class="h2 reveal" data-d="1">Your sky, tonight</h2>
+          <p class="panel__lede reveal" data-d="2">
+            The zodiac is not a decoration on the sky — it is the ecliptic itself,
+            the plane the planets actually travel in, divided into twelve equal
+            thirty-degree signs. Give it a moment and it will be cast.
+          </p>
+        </header>
+
+        <div class="chart">
+          <figure class="chart__wheel">
+            <canvas id="wheel" width="900" height="900" role="img"
+                    aria-label="Natal chart wheel showing planetary longitudes against the twelve signs"></canvas>
+            <figcaption class="chart__cap" id="wheelCap">Cast a chart below</figcaption>
+          </figure>
+
+          <form class="chart__form" id="chartForm" autocomplete="off">
+            <div class="chart__row">
+              <label class="field">
+                <span class="field__label">Date</span>
+                <input type="date" id="cDate" required>
+              </label>
+              <label class="field">
+                <span class="field__label">Time · local</span>
+                <input type="time" id="cTime" value="12:00" required>
+              </label>
+            </div>
+            <div class="chart__row">
+              <label class="field">
+                <span class="field__label">Latitude</span>
+                <input type="number" id="cLat" value="51.4779" step="0.0001" min="-90" max="90" required>
+              </label>
+              <label class="field">
+                <span class="field__label">Longitude</span>
+                <input type="number" id="cLon" value="-0.0015" step="0.0001" min="-180" max="180" required>
+              </label>
+            </div>
+            <div class="chart__row">
+              <label class="field">
+                <span class="field__label">Name <em>optional</em></span>
+                <input type="text" id="cName" maxlength="28" placeholder="—">
+              </label>
+              <label class="field">
+                <span class="field__label">Timezone · hours</span>
+                <input type="number" id="cTz" value="0" step="0.25" min="-12" max="14">
+              </label>
+            </div>
+            <button class="btn btn--solid" type="submit">
+              <span>Cast the chart</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m0 0l-5-5m5 5l-5 5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+            </button>
+            <p class="chart__note">
+              Positions from VSOP/ELP-derived series — Sun and Moon to
+              arcseconds, planets to arcminutes. The Ascendant and Midheaven
+              are exact for the given latitude and local sidereal time.
+            </p>
+          </form>
+        </div>
+
+        <div class="aspects" id="aspects" hidden>
+          <h3 class="micro">Aspects in tension</h3>
+          <ul class="aspects__list" id="aspectsList"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================== outro -->
+  <section class="chapter chapter--outro" id="outro" data-chapter="outro">
+    <div class="sticky">
+      <div class="wrap outro">
+        <p class="eyebrow reveal" data-d="0"><span class="eyebrow__rule" aria-hidden="true"></span>Colophon</p>
+        <h2 class="display display--mid reveal" data-d="1">
+          <span>Two and a half</span>
+          <em>light-hours</em>
+        </h2>
+        <div class="outro__cols">
+          <div class="outro__col reveal" data-d="2">
+            <h3>What is computed</h3>
+            <p>Planetary positions come from Keplerian elements referred to J2000
+               with per-century rates, including the great Jupiter–Plute inequality.
+               A Newton–Raphson solver iterates the eccentric anomaly. The Moon
+               and Sun use truncated ELP2000 and solar series; sidereal time,
+               the Ascendant and Midheaven are spherical trigonometry.</p>
+          </div>
+          <div class="outro__col reveal" data-d="3">
+            <h3>What is drawn</h3>
+            <p>Every surface is generated at load from value noise evaluated on
+               the unit sphere, so the maps are seamless and honest to latitude.
+               Spheres are mapped with the relations
+               <em>dlon = asin(x/R)</em>, <em>dlat = asin(y/R)</em>. The day/night
+               line is the projection of a great circle, solved in closed form
+               rather than faked with a gradient. Saturn's rings are the conic
+               their own spin axis implies, built from the real ring structure.</p>
+          </div>
+          <div class="outro__col reveal" data-d="4">
+            <h3>What is claimed</h3>
+            <p>Nothing here is a horoscope. The astronomy is real and verifiable.
+               The astrology is four thousand years of a different kind of
+               observation — that it is beautiful is not evidence that it is true,
+               and it is offered as the latter, never the former.</p>
+          </div>
+        </div>
+        <p class="colophon reveal" data-d="5">
+          Keplerian elements after Standish · lunar and solar series after Meeus ·
+          radii, rotation and satellite counts after the NASA/JPL planetary fact sheets.
+          No frameworks, no build step, no canvas libraries.
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ============================================================== loader -->
+<div class="loader" id="loader">
+  <div class="loader__inner">
+    <p class="loader__label">Calibrating ephemeris</p>
+    <div class="loader__bar"><i id="loadFill"></i></div>
+    <p class="loader__pct" id="loadPct">0%</p>
+  </div>
+</div>
+
+<!-- ================================================================ nav dots -->
+<nav class="dots" id="dots" aria-label="Chapter navigation"></nav>
+
+<script src="js/data.js"></script>
+<script src="js/ephemeris.js"></script>
+<script src="js/textures.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/chart.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
